@@ -23,12 +23,11 @@ class FTF_Fediverse_Sharing_Button
 
   function get_default_sharing_prompt()
   {
-    return "Share this page from your <a href='https://jointhefediverse.net/'>fediverse</a> server";
+    return "Share this page from your <a target='_blank' href='https://jointhefediverse.net/'>fediverse</a> server";
   }
 
   function get_sharing_button_html()
   {
-    // $default_sharing_prompt = "Share this page from your <a href='https://jointhefediverse.net/'>fediverse</a> server";
     $sharing_prompt = html_entity_decode(get_option("ftf_fsb_sharing_prompt", self::get_default_sharing_prompt()));
 
     if (empty($sharing_prompt)) {
