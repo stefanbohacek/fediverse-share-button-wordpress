@@ -17,7 +17,8 @@ class FTF_Fediverse_Sharing_Button
     add_filter("plugin_action_links_ftf-fediverse-sharing-button.php", array($this, "settings_page_link"));
     add_filter("plugin_action_links_" . plugin_basename(__FILE__), array($this, "settings_page_link"));
     add_filter("plugin_action_links_ftf-fediverse-sharing-button/index.php", array($this, "settings_page_link"));
-    add_filter("the_content", array($this, "insert_sharing_button"), 999999);
+    add_filter("the_content", array($this, "insert_sharing_button_content"), 999999);
+    add_filter("wp_footer", array($this, "insert_sharing_button_home"), 999999);
     add_filter("term_description", array($this, "insert_sharing_button_archive"), 999999);
   }
 
@@ -82,18 +83,27 @@ class FTF_Fediverse_Sharing_Button
     return $description;
   }
 
-  function insert_sharing_button($content)
+  function insert_sharing_button_home()
+  {
+    $show_sharing_button = false;
+
+    if (is_home() && get_option("ftf_fsb_location_front_page", "on") === "on") {
+
+      $sharing_button_html = self::get_sharing_button_html();
+      echo "<div style='max-width: 500px; margin: 0 auto 5rem;'>$sharing_button_html</div>";
+    }
+  }
+
+  function insert_sharing_button_content($content)
   {
     global $post;
     $show_sharing_button = false;
 
     if (is_front_page($post)) {
-      if (get_option("ftf_fsb_location_front_page", "on") === "on") {
-        $show_sharing_button = true;
-      }
-    } elseif (is_home($post)) {
-      if (get_option("ftf_fsb_location_home", "on") === "on") {
-        $show_sharing_button = true;
+      if (!is_home($post)) {
+        if (get_option("ftf_fsb_location_front_page", "on") === "on") {
+          $show_sharing_button = true;
+        }
       }
     } elseif (is_page($post)) {
       if (get_option("ftf_fsb_location_pages", "on") === "on") {
@@ -111,6 +121,17 @@ class FTF_Fediverse_Sharing_Button
       $sharing_button_html = self::get_sharing_button_html();
       $content = $content . $sharing_button_html;
     }
+
+    // echo "<pre class=\"card p-4\"><code>";
+    // var_dump(array(
+    //   "is_front_page" => is_front_page($post),
+    //   "is_home" => is_home($post),
+    //   "is_page" => is_page($post),
+    //   "is_single" => is_single($post),
+    //   "show_sharing_button" => $show_sharing_button,
+    //   // "content" => $content,
+    // ));
+    // echo "</code></pre>";
 
     return  $content;
   }
@@ -193,10 +214,6 @@ class FTF_Fediverse_Sharing_Button
       array(
         "name" => "front_page",
         "label" => "Home page",
-      ),
-      array(
-        "name" => "home",
-        "label" => "Blog home page",
       ),
       array(
         "name" => "articles",
