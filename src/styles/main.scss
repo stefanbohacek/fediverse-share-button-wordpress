@@ -1,12 +1,15 @@
 .fsb-prompt {
   max-width: 500px;
   margin-top: 52px;
+  padding-left: 4px;
+  padding-right: 4px;
+
+  label {
+    display: block;
+    margin-bottom: 12px;
+  }
 }
 
-.fsb-prompt label {
-  display: block;
-  margin-bottom: 12px;
-}
 
 .fsb-icon {
   max-width: 1em;
@@ -88,7 +91,7 @@ input.fsb-input ::-ms-input-placeholder {
   opacity: 1;
 }
 
-input.fsb-input.fsb-domain{
+input.fsb-input.fsb-domain {
   width: auto;
 }
 
@@ -99,7 +102,7 @@ button.fsb-button {
   line-height: 1em;
   margin: 0;
   display: inline-block;
-  padding: 6px 12px;
+  padding: 6px 4px;
   text-align: center;
   text-decoration: none;
   vertical-align: middle;
@@ -112,8 +115,12 @@ button.fsb-button {
   border-bottom-right-radius: 8px !important;
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
-}
 
-button.fsb-button:disabled{
-  color: silver;  
+  @media only screen and (min-width: 600px) {
+    padding: 6px 12px;
+  }
+
+  &:disabled {
+    color: silver;
+  }
 }
