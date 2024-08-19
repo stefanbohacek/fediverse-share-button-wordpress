@@ -1,0 +1,1 @@
+See https://github.com/stefanbohacek/fediverse-share-button/issues/4 for a list of missing icons.

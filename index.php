@@ -11,7 +11,7 @@ class FTF_Fediverse_Sharing_Button
 
   function __construct()
   {
-    // add_action("init", array($this, "enqueue_scripts_and_styles"));
+    add_action("init", array($this, "enqueue_scripts_and_styles"));
     add_action("admin_init", array($this, "settings_init"));
     add_action("admin_menu", array($this, "add_settings_page"));
     add_filter("plugin_action_links_ftf-fediverse-sharing-button.php", array($this, "settings_page_link"));
@@ -20,6 +20,7 @@ class FTF_Fediverse_Sharing_Button
     add_filter("the_content", array($this, "insert_sharing_button_content"), 999999);
     add_filter("wp_footer", array($this, "insert_sharing_button_home"), 999999);
     add_filter("term_description", array($this, "insert_sharing_button_archive"), 999999);
+    add_filter("rest_api_init", array($this, "add_fediverse_server_info_endpoint"), 999999);
   }
 
   function get_default_sharing_prompt()
@@ -35,6 +36,8 @@ class FTF_Fediverse_Sharing_Button
       $sharing_prompt = self::get_default_sharing_prompt();
     }
 
+    $icons_url = plugin_dir_url(__FILE__) . "assets/icons";
+
     return <<<HTML
     <form class="fsb-prompt">
       <label>{$sharing_prompt}</label>
@@ -47,7 +50,7 @@ class FTF_Fediverse_Sharing_Button
           class="fsb-input fsb-domain"
           aria-label="Server domain">
         <button class="fsb-button"
-          type="submit"><img src="https://fediverse-share-button.stefanbohacek.dev/fediverse-share-button/icons/mastodon.svg"
+          type="submit"><img src="{$icons_url}/fediverse.svg"
             class="fsb-icon"></span>Share</button>
       </div>
       <p class="fsb-support-note fsb-d-none">This server does not support sharing. Please visit <a
@@ -55,9 +58,6 @@ class FTF_Fediverse_Sharing_Button
           target="_blank"
           href=""></a>.</p>
     </form>
-    <link rel="stylesheet" href="https://fediverse-share-button.stefanbohacek.dev/fediverse-share-button/styles.min.css">
-    <script src="https://fediverse-share-button.stefanbohacek.dev/fediverse-share-button/script.min.js" defer class="fsb-script"></script>
-
     HTML;
   }
 
@@ -122,17 +122,6 @@ class FTF_Fediverse_Sharing_Button
       $content = $content . $sharing_button_html;
     }
 
-    // echo "<pre class=\"card p-4\"><code>";
-    // var_dump(array(
-    //   "is_front_page" => is_front_page($post),
-    //   "is_home" => is_home($post),
-    //   "is_page" => is_page($post),
-    //   "is_single" => is_single($post),
-    //   "show_sharing_button" => $show_sharing_button,
-    //   // "content" => $content,
-    // ));
-    // echo "</code></pre>";
-
     return  $content;
   }
 
@@ -144,13 +133,34 @@ class FTF_Fediverse_Sharing_Button
       "strategy"  => "defer",
     ));
 
+    $plugin_data = get_file_data(__DIR__ . '/index.php', array('Version' => 'Version'), false);
+    $plugin_version = $plugin_data['Version'];
+
+    $use_external_fediverse_info_server =  get_option("ftf_fsb_location_external_fediverse_info_server", "") === "on";
+
+    wp_localize_script("ftf-fsb-main-script", "ftf_fediverse_sharing_button", array(
+      "ajax_url" => admin_url("admin-ajax.php"),
+      "blog_url" => get_site_url(),
+      "plugin_url" => plugin_dir_url(__FILE__),
+      "nonce" => wp_create_nonce("ftf-fediverse-sharing-button"),
+      "config" => array(
+        // "theme" => $theme,
+        "use_external_fediverse_info_server" => $use_external_fediverse_info_server,
+      ),
+      "version" => $plugin_version
+    ));
+
     wp_enqueue_script("ftf-fsb-main-script");
 
     $style = get_option("ftf_fsb_style", "default");
 
+    if (empty($style)) {
+      $style = "default";
+    }
+
     if ($style === "default") {
-      $css_file_path = plugin_dir_path(__FILE__) . "dist/css/styles.min.css";
-      wp_register_style("ftf-fsb-styles", plugin_dir_url(__FILE__) . "dist/css/styles.min.css", array(), filemtime($css_file_path), "all");
+      $css_file_path = plugin_dir_path(__FILE__) . "dist/css/main.min.css";
+      wp_register_style("ftf-fsb-styles", plugin_dir_url(__FILE__) . "dist/css/main.min.css", array(), filemtime($css_file_path), "all");
       wp_enqueue_style("ftf-fsb-styles");
     }
   }
@@ -187,6 +197,7 @@ class FTF_Fediverse_Sharing_Button
     register_setting("FTF_Fediverse_Sharing_Button", "ftf_fsb_style", "esc_attr");
     register_setting("FTF_Fediverse_Sharing_Button", "ftf_fsb_location_on_page", "esc_attr");
     register_setting("FTF_Fediverse_Sharing_Button", "ftf_fsb_sharing_prompt", "esc_attr");
+    register_setting("FTF_Fediverse_Sharing_Button", "ftf_fsb_location_external_fediverse_info_server", "esc_attr");
 
     $button_locations = self::get_button_locations();
 
@@ -253,6 +264,11 @@ class FTF_Fediverse_Sharing_Button
   function render_settings_form()
   {
     $style = get_option("ftf_fsb_style", "default");
+
+    if (empty($style)) {
+      $style = "default";
+    }
+
     $button_location_on_page = get_option("ftf_fsb_location_on_page", "after_content");
     $sharing_prompt = html_entity_decode(get_option("ftf_fsb_sharing_prompt"));
 
@@ -314,7 +330,20 @@ class FTF_Fediverse_Sharing_Button
         <?php } ?>
       </ul>
     <?php } ?>
-    <p class="description">Note that some themes may interfere with the display of the sharing button on specific types of pages.</p>
+    <p class="description">Note that some themes may interfere with the display of the sharing button on specific types of pages. Please <a href="https://stefanbohacek.com/contact/">reach out</a> if you encounter such issues.</p>
+
+    <?php
+    $use_external_fediverse_info_server =  get_option("ftf_fsb_location_external_fediverse_info_server", "") === "on";
+    ?>
+
+    <label>
+      <input type="checkbox" name="ftf_fsb_location_external_fediverse_info_server" value="on" <?php checked($use_external_fediverse_info_server, true) ?>>
+      <strong>Use external service for fetching fediverse server information</strong>
+    </label>
+
+    <p class="description">If you experience any slowness while using this plugin, enabling this option will switch to an external server for fetching fediverse server information.</p>
+
+
     <h3>About</h3>
     <ul class="ul-disc">
       <li>
@@ -348,6 +377,72 @@ class FTF_Fediverse_Sharing_Button
       $settings_link
     );
     return $links;
+  }
+
+  function add_fediverse_server_info_endpoint()
+  {
+    register_rest_route("ftf_fsb/v1", "fediverse-server-info", array(
+      "methods" => "GET",
+      "callback" => array($this, "get_fediverse_server_info"),
+    ));
+  }
+
+  function get_fediverse_server_info(\WP_REST_Request $request)
+  {
+    $domain = $request["domain"];
+
+    $response = array(
+      "domain" => $domain,
+      "software" => false
+    );
+
+    if (!empty($domain)) {
+      $fediverse_server_data = self::load_fediverse_server_info();
+
+      if (array_key_exists($domain, $fediverse_server_data)) {
+        $response["software"]["name"] = $fediverse_server_data[$domain];
+      } else {
+        $response["software"] = self::get_node_info($domain);
+      }
+    }
+
+    return $response;
+  }
+
+  function load_fediverse_server_info()
+  {
+    $server_data_file_path = WP_PLUGIN_DIR . "/fediverse-share-button/data/server-info.csv";
+    $lines = explode("\n", file_get_contents($server_data_file_path));
+    $headers = str_getcsv(array_shift($lines));
+    $data = array();
+    foreach ($lines as $line) {
+      $data[str_getcsv($line)[0]] = str_getcsv($line)[1];
+    }
+
+    return $data;
+  }
+
+  function get_node_info($domain)
+  {
+    $software = array();
+    $response = wp_remote_get("https://$domain/.well-known/nodeinfo");
+
+    if (is_array($response) && ! is_wp_error($response)) {
+      $body = json_decode($response["body"]);
+      if (!empty($body->links)) {
+        $link = $body->links[0]->href;
+        $response = wp_remote_get($link);
+
+        if (is_array($response) && ! is_wp_error($response)) {
+          $body = json_decode($response["body"]);
+          if (!empty($body->software)) {
+            $software = $body->software;
+          }
+        }
+      }
+    }
+
+    return $software;
   }
 }
 
