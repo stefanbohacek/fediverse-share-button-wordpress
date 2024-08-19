@@ -46,7 +46,7 @@ class FTF_Fediverse_Sharing_Button
         <input required
           type="text"
           name="fediverse-domain"
-          placeholder="mastodon.social"
+          placeholder="server.social"
           class="fsb-input fsb-domain"
           aria-label="Server domain">
         <button class="fsb-button"
