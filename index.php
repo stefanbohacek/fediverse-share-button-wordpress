@@ -12,6 +12,7 @@ class FTF_Fediverse_Sharing_Button
   function __construct()
   {
     add_action("init", array($this, "enqueue_scripts_and_styles"));
+    // add_action("init", array($this, "register_block"));
     add_action("admin_init", array($this, "settings_init"));
     add_action("admin_menu", array($this, "add_settings_page"));
     add_filter("plugin_action_links_ftf-fediverse-sharing-button.php", array($this, "settings_page_link"));
@@ -21,6 +22,23 @@ class FTF_Fediverse_Sharing_Button
     add_filter("wp_footer", array($this, "insert_sharing_button_home"), 999999);
     add_filter("term_description", array($this, "insert_sharing_button_archive"), 999999);
     add_filter("rest_api_init", array($this, "add_fediverse_server_info_endpoint"), 999999);
+  }
+
+  function register_block()
+  {
+    register_block_type(__DIR__);
+
+    // register_block_type(
+    //   "ftf-fsb/sharing-button",
+    //   array(
+    //     "render_callback" => array($this, "render_block"),
+    //   )
+    // );
+  }
+
+  function render_block()
+  {
+    echo "HELLO WORLD!";
   }
 
   function get_default_sharing_prompt()
@@ -384,6 +402,7 @@ class FTF_Fediverse_Sharing_Button
     register_rest_route("ftf_fsb/v1", "fediverse-server-info", array(
       "methods" => "GET",
       "callback" => array($this, "get_fediverse_server_info"),
+      "permission_callback" => "__return_true",
     ));
   }
 
@@ -411,7 +430,7 @@ class FTF_Fediverse_Sharing_Button
 
   function load_fediverse_server_info()
   {
-    $server_data_file_path = WP_PLUGIN_DIR . "/fediverse-share-button/data/server-info.csv";
+    $server_data_file_path = plugin_dir_path( __FILE__ ) . "data/server-info.csv";
     $lines = explode("\n", file_get_contents($server_data_file_path));
     $headers = str_getcsv(array_shift($lines));
     $data = array();
