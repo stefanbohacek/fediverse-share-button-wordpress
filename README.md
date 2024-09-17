@@ -4,6 +4,8 @@
 
 This WordPress plugin is under active development and will be available from the WordPress plugin directory soon. [More about the project](https://stefanbohacek.com/project/fediverse-sharing-button/)
 
+The list of supported platforms is [in this separate GitHub repo](https://github.com/stefanbohacek/fediverse-share-button/#faq).
+
 ## Development
 
 1. Install dependencies with `npm install`.
