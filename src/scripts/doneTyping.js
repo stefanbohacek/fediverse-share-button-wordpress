@@ -10,7 +10,7 @@ export default async (el) => {
 
   const fediverseInfoServer = ftf_fediverse_sharing_button.config
     .use_external_fediverse_info_server
-    ? `https://fediverse-info.stefanbohacek.dev/node-info?domain=${domain}&onlysoftware=true`
+    ? `https://fediverse-info.stefanbohacek.com/node-info?domain=${domain}&onlysoftware=true`
     : `${ftf_fediverse_sharing_button.blog_url}/wp-json/ftf_fsb/v1/fediverse-server-info?domain=${domain}`;
 
   const resp = await fetch(fediverseInfoServer);
