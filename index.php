@@ -2,7 +2,7 @@
 /*
     Plugin Name: Fediverse sharing button
     Description: Let your website's visitors share your site with the fediverse.
-    Version:     1.0.0
+    Version:     1.0.1
     Author:      Stefan Bohacek
 */
 
@@ -69,7 +69,7 @@ class FTF_Fediverse_Sharing_Button
           aria-label="Server domain">
         <button class="fsb-button"
           type="submit"><img src="{$icons_url}/fediverse.svg"
-            class="fsb-icon"></span>Share</button>
+            class="fsb-icon" alt="Fediverse logo"></span>Share</button>
       </div>
       <p class="fsb-support-note fsb-d-none">This server does not support sharing. Please visit <a
           class="fsb-support-note-link"

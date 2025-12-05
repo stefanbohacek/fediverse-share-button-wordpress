@@ -26,5 +26,8 @@ Let your site's visitors share your work with the fediverse!
 
 == Changelog ==
 
-= 1.0 =
+= 1.0.1 =
+* Fixed missing initial alt text for the Fediverse logo.
+
+= 1.0.0 =
 * Initial release.
